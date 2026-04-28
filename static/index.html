@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Intelligence Dashboard</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --green: #3fb950;
+    --red: #f85149;
+    --blue: #58a6ff;
+    --yellow: #d29922;
+    --purple: #bc8cff;
+    --neutral: #8b949e;
+    --card-hover: #1c2128;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--card);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-left h1 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
+  .header-left span {
+    font-size: 11px;
+    color: var(--muted);
+    margin-left: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  #last-updated {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  #refresh-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--blue);
+    color: #0d1117;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  #refresh-btn:hover { opacity: 0.85; }
+  #refresh-btn:active { transform: scale(0.97); }
+  #refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  #refresh-btn svg { transition: transform 0.6s; }
+  #refresh-btn.loading svg { animation: spin 1s linear infinite; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Layout ── */
+  main {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px 24px;
+    display: grid;
+    gap: 16px;
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Indices Row ── */
+  .indices-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr) 0.7fr;
+    gap: 12px;
+  }
+
+  .index-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .index-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .index-price {
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  .index-change {
+    font-size: 13px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .forex-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    text-align: center;
+  }
+
+  /* ── Middle Row ── */
+  .mid-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.2fr;
+    gap: 16px;
+  }
+
+  .commodity-list, .rate-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .commodity-item, .rate-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    background: var(--bg);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+
+  .commodity-name, .rate-name {
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .commodity-right, .rate-right {
+    text-align: right;
+  }
+
+  .commodity-price, .rate-value {
+    font-size: 14px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .commodity-change, .rate-sub {
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Movers ── */
+  .movers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .movers-section-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+
+  .mover-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    background: var(--bg);
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    margin-bottom: 6px;
+  }
+
+  .mover-symbol {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .mover-name {
+    font-size: 10px;
+    color: var(--muted);
+    max-width: 110px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mover-pct {
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── News ── */
+  .news-section .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+  }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 14px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.15s;
+    border-radius: 4px 4px 0 0;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active {
+    color: var(--blue);
+    border-bottom-color: var(--blue);
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .news-list { display: flex; flex-direction: column; gap: 2px; }
+
+  .news-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 10px;
+    border-radius: 6px;
+    transition: background 0.1s;
+    border: 1px solid transparent;
+  }
+
+  .news-item:hover {
+    background: var(--card-hover);
+    border-color: var(--border);
+  }
+
+  .news-bullet {
+    color: var(--blue);
+    font-size: 16px;
+    line-height: 1.4;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .news-body { flex: 1; min-width: 0; }
+
+  .news-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+  }
+
+  .news-title:hover { color: var(--blue); text-decoration: underline; }
+
+  .news-meta {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  .news-no-key {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+
+  .news-no-key code {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 12px;
+    color: var(--yellow);
+  }
+
+  /* ── Reddit / Dark Horse ── */
+  .reddit-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .reddit-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    transition: border-color 0.15s;
+  }
+
+  .reddit-item:hover { border-color: var(--blue); }
+
+  .reddit-item a {
+    text-decoration: none;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .reddit-item a:hover { color: var(--blue); }
+
+  .reddit-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .badge-sub { background: #1c2128; color: var(--muted); border: 1px solid var(--border); }
+  .badge-pos { background: #12261e; color: var(--green); border: 1px solid #1a4731; }
+  .badge-neg { background: #2d1113; color: var(--red); border: 1px solid #67060c; }
+  .badge-neu { background: #1c2128; color: var(--neutral); border: 1px solid var(--border); }
+
+  .reddit-stats {
+    font-size: 11px;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  /* ── Utility classes ── */
+  .up { color: var(--green); }
+  .down { color: var(--red); }
+  .flat { color: var(--muted); }
+
+  .skeleton {
+    background: linear-gradient(90deg, var(--border) 25%, #3d444d 50%, var(--border) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+    height: 18px;
+  }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+
+  .error-text { color: var(--red); font-size: 12px; }
+
+  /* ── Responsive ── */
+  @media (max-width: 1100px) {
+    .indices-row { grid-template-columns: repeat(3, 1fr); }
+    .mid-row { grid-template-columns: 1fr 1fr; }
+    .reddit-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 700px) {
+    .indices-row { grid-template-columns: 1fr 1fr; }
+    .mid-row { grid-template-columns: 1fr; }
+    .movers-grid { grid-template-columns: 1fr; }
+    .reddit-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>Market Intelligence Dashboard</h1>
+    <span>Canada Focus</span>
+  </div>
+  <div class="header-right">
+    <span id="last-updated">Not yet loaded</span>
+    <button id="refresh-btn">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+      </svg>
+      Refresh All
+    </button>
+  </div>
+</header>
+
+<main>
+
+  <!-- Indices + Forex -->
+  <div class="indices-row" id="indices-row">
+    <div class="index-card"><div class="index-label">S&P 500</div><div class="index-price skeleton" style="width:80px"></div><div class="index-change skeleton" style="width:60px;height:14px;margin-top:4px"></div></div>
+    <div class="index-card"><div class="index-label">Dow Jones</div><div class="index-price skeleton" style="width:80px"></div><div class="index-change skeleton" style="width:60px;height:14px;margin-top:4px"></div></div>
+    <div class="index-card"><div class="index-label">NASDAQ</div><div class="index-price skeleton" style="width:80px"></div><div class="index-change skeleton" style="width:60px;height:14px;margin-top:4px"></div></div>
+    <div class="index-card"><div class="index-label">TSX Composite</div><div class="index-price skeleton" style="width:80px"></div><div class="index-change skeleton" style="width:60px;height:14px;margin-top:4px"></div></div>
+    <div class="forex-card" id="forex-card"><div class="index-label">USD / CAD</div><div class="index-price skeleton" style="width:60px"></div><div class="index-change skeleton" style="width:50px;height:14px;margin-top:4px"></div></div>
+  </div>
+
+  <!-- Commodities / Rates / Movers -->
+  <div class="mid-row">
+
+    <div class="card">
+      <div class="card-title">Commodities</div>
+      <div class="commodity-list" id="commodity-list">
+        <div class="commodity-item"><span class="commodity-name">WTI Crude</span><div class="skeleton" style="width:80px"></div></div>
+        <div class="commodity-item"><span class="commodity-name">Natural Gas</span><div class="skeleton" style="width:80px"></div></div>
+        <div class="commodity-item"><span class="commodity-name">Gold</span><div class="skeleton" style="width:80px"></div></div>
+        <div class="commodity-item"><span class="commodity-name">Copper</span><div class="skeleton" style="width:80px"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Rates &amp; Macro</div>
+      <div class="rate-list" id="rate-list">
+        <div class="rate-item"><span class="rate-name">BoC Overnight</span><div class="skeleton" style="width:80px"></div></div>
+        <div class="rate-item"><span class="rate-name">GoC 10-Year</span><div class="skeleton" style="width:80px"></div></div>
+        <div class="rate-item"><span class="rate-name">US 10-Year</span><div class="skeleton" style="width:80px"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Top Movers — CA &amp; US Blue Chips</div>
+      <div class="movers-grid">
+        <div>
+          <div class="movers-section-label up">▲ Leaders</div>
+          <div id="movers-top"></div>
+        </div>
+        <div>
+          <div class="movers-section-label down">▼ Laggards</div>
+          <div id="movers-bottom"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- News -->
+  <div class="card news-section">
+    <div class="card-title">Industry News</div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="oil_sands">🛢 Oil Sands</button>
+      <button class="tab-btn" data-tab="utilities">⚡ Utilities</button>
+      <button class="tab-btn" data-tab="banking">🏦 Banking</button>
+      <button class="tab-btn" data-tab="politics">🍁 Politics &amp; Polling</button>
+    </div>
+    <div class="tab-content active" id="tab-oil_sands"><div class="news-list" id="news-oil_sands"></div></div>
+    <div class="tab-content" id="tab-utilities"><div class="news-list" id="news-utilities"></div></div>
+    <div class="tab-content" id="tab-banking"><div class="news-list" id="news-banking"></div></div>
+    <div class="tab-content" id="tab-politics"><div class="news-list" id="news-politics"></div></div>
+  </div>
+
+  <!-- Dark Horse / Reddit -->
+  <div class="card">
+    <div class="card-title">
+      🔥 Dark Horse — Trending on Reddit
+      <span style="font-size:10px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400">r/canada · r/alberta · r/CanadaPolitics · r/CanadianInvestor · r/oilsands · r/PersonalFinanceCanada</span>
+    </div>
+    <div class="reddit-grid" id="reddit-grid">
+      <div style="color:var(--muted);font-size:13px">Hit Refresh to load Reddit trends...</div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+
+// ── Formatting helpers ──────────────────────────────────────────────────────
+
+function fmtNum(n, decimals = 2) {
+  if (n == null) return '—';
+  return Number(n).toLocaleString('en-US', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+}
+
+function fmtChange(change, pct) {
+  if (change == null) return '';
+  const sign = change >= 0 ? '+' : '';
+  const cls = change > 0 ? 'up' : change < 0 ? 'down' : 'flat';
+  return `<span class="${cls}">${sign}${fmtNum(change)} (${sign}${fmtNum(pct)}%)</span>`;
+}
+
+function timeAgo(isoStr) {
+  if (!isoStr) return '';
+  const diff = (Date.now() - new Date(isoStr)) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
+function sentimentBadge(s) {
+  if (s === 'positive') return '<span class="badge badge-pos">▲ Positive</span>';
+  if (s === 'negative') return '<span class="badge badge-neg">▼ Negative</span>';
+  return '<span class="badge badge-neu">● Neutral</span>';
+}
+
+// ── Render functions ────────────────────────────────────────────────────────
+
+function renderIndices(indices, forex) {
+  const row = $('indices-row');
+  row.innerHTML = '';
+
+  for (const q of indices) {
+    const decimals = q.price > 1000 ? 2 : 4;
+    const div = document.createElement('div');
+    div.className = 'index-card';
+    const cls = q.pct_change > 0 ? 'up' : q.pct_change < 0 ? 'down' : 'flat';
+    const sign = q.change >= 0 ? '+' : '';
+    div.innerHTML = `
+      <div class="index-label">${q.label}</div>
+      <div class="index-price ${cls}">${fmtNum(q.price, 2)}</div>
+      <div class="index-change ${cls}">${sign}${fmtNum(q.change, 2)} <span style="opacity:.7">(${sign}${fmtNum(q.pct_change)}%)</span></div>
+    `;
+    row.appendChild(div);
+  }
+
+  const fc = document.createElement('div');
+  fc.className = 'forex-card';
+  const fq = forex;
+  const fSign = fq.change >= 0 ? '+' : '';
+  const fCls = fq.pct_change > 0 ? 'up' : fq.pct_change < 0 ? 'down' : 'flat';
+  fc.innerHTML = `
+    <div class="index-label">${fq.label}</div>
+    <div class="index-price">${fmtNum(fq.price, 4)}</div>
+    <div class="index-change ${fCls}">${fSign}${fmtNum(fq.change, 4)} <span style="opacity:.7">(${fSign}${fmtNum(fq.pct_change)}%)</span></div>
+  `;
+  row.appendChild(fc);
+}
+
+function renderCommodities(commodities) {
+  const unitMap = { 'CL=F': 'USD/bbl', 'NG=F': 'USD/MMBtu', 'GC=F': 'USD/oz', 'HG=F': 'USD/lb' };
+  $('commodity-list').innerHTML = commodities.map(c => {
+    const sign = c.change >= 0 ? '+' : '';
+    const cls = c.pct_change > 0 ? 'up' : c.pct_change < 0 ? 'down' : 'flat';
+    const unit = unitMap[c.symbol] || '';
+    return `
+      <div class="commodity-item">
+        <div>
+          <div class="commodity-name">${c.label}</div>
+          <div style="font-size:10px;color:var(--muted)">${unit}</div>
+        </div>
+        <div class="commodity-right">
+          <div class="commodity-price">${fmtNum(c.price, 2)}</div>
+          <div class="commodity-change ${cls}">${sign}${fmtNum(c.change, 2)} (${sign}${fmtNum(c.pct_change)}%)</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderRates(rates) {
+  const boc = rates.boc;
+  const ca = rates['ca_10yr'];
+  const us = rates['us_10yr'];
+
+  const bocHtml = boc.rate != null
+    ? `<div class="rate-value">${boc.rate.toFixed(2)}%</div><div class="rate-sub" style="color:var(--muted)">as of ${boc.date}</div>`
+    : `<div class="error-text">Unavailable</div>`;
+
+  const bondRow = (q) => {
+    if (!q || q.price == null) return `<div class="error-text">Unavailable</div>`;
+    const sign = q.change >= 0 ? '+' : '';
+    const cls = q.pct_change > 0 ? 'up' : q.pct_change < 0 ? 'down' : 'flat';
+    return `<div class="rate-value">${fmtNum(q.price, 3)}%</div><div class="rate-sub ${cls}">${sign}${fmtNum(q.change, 3)} bps</div>`;
+  };
+
+  $('rate-list').innerHTML = `
+    <div class="rate-item">
+      <div><div class="rate-name">BoC Overnight</div><div style="font-size:10px;color:var(--muted)">Policy Rate</div></div>
+      <div class="rate-right">${bocHtml}</div>
+    </div>
+    <div class="rate-item">
+      <div><div class="rate-name">GoC 10-Year</div><div style="font-size:10px;color:var(--muted)">Government of Canada</div></div>
+      <div class="rate-right">${bondRow(ca)}</div>
+    </div>
+    <div class="rate-item">
+      <div><div class="rate-name">US 10-Year</div><div style="font-size:10px;color:var(--muted)">US Treasury</div></div>
+      <div class="rate-right">${bondRow(us)}</div>
+    </div>
+  `;
+}
+
+function renderMovers(movers) {
+  const makeItem = m => {
+    const sign = m.pct_change >= 0 ? '+' : '';
+    const cls = m.pct_change > 0 ? 'up' : 'down';
+    return `
+      <div class="mover-item">
+        <div>
+          <div class="mover-symbol">${m.symbol.replace('.TO', '')}</div>
+          <div class="mover-name">${m.name}</div>
+        </div>
+        <div class="mover-pct ${cls}">${sign}${fmtNum(m.pct_change)}%</div>
+      </div>`;
+  };
+  $('movers-top').innerHTML = movers.top.map(makeItem).join('');
+  $('movers-bottom').innerHTML = movers.bottom.map(makeItem).join('');
+}
+
+function renderNews(newsData, enabled) {
+  const tabs = ['oil_sands', 'utilities', 'banking', 'politics'];
+
+  if (!enabled) {
+    tabs.forEach(t => {
+      $(`news-${t}`).innerHTML = `
+        <div class="news-no-key">
+          <p style="margin-bottom:10px">NewsAPI key not configured.</p>
+          <p>Set <code>NEWS_API_KEY=your_key</code> in your <code>.env</code> file and restart.</p>
+          <p style="margin-top:8px;font-size:11px">Get a free key at <strong>newsapi.org</strong></p>
+        </div>`;
+    });
+    return;
+  }
+
+  const keyMap = { oil_sands: 'oil_sands', utilities: 'utilities', banking: 'banking', politics: 'politics' };
+
+  tabs.forEach(tab => {
+    const articles = newsData[keyMap[tab]] || [];
+    if (!articles.length) {
+      $(`news-${tab}`).innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center;font-size:13px">No recent articles found.</div>';
+      return;
+    }
+    if (articles[0]?.error) {
+      $(`news-${tab}`).innerHTML = `<div class="error-text" style="padding:16px">${articles[0].error}</div>`;
+      return;
+    }
+    $(`news-${tab}`).innerHTML = articles.map(a => `
+      <div class="news-item">
+        <span class="news-bullet">›</span>
+        <div class="news-body">
+          <a class="news-title" href="${escHtml(a.url)}" target="_blank" rel="noopener">${escHtml(a.title)}</a>
+          <div class="news-meta">${escHtml(a.source)} · ${timeAgo(a.published)}</div>
+        </div>
+      </div>`).join('');
+  });
+}
+
+function renderReddit(posts) {
+  if (!posts || !posts.length) {
+    $('reddit-grid').innerHTML = '<div style="color:var(--muted);font-size:13px">No Reddit data available.</div>';
+    return;
+  }
+  $('reddit-grid').innerHTML = posts.map(p => `
+    <div class="reddit-item">
+      <a href="${escHtml(p.url)}" target="_blank" rel="noopener">${escHtml(p.title)}</a>
+      <div class="reddit-meta">
+        <span class="badge badge-sub">r/${p.subreddit}</span>
+        ${sentimentBadge(p.sentiment)}
+        <span class="reddit-stats">▲${p.score.toLocaleString()} · ${p.comments} comments</span>
+      </div>
+    </div>`).join('');
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ── Tabs ────────────────────────────────────────────────────────────────────
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    $(`tab-${btn.dataset.tab}`).classList.add('active');
+  });
+});
+
+// ── Refresh ─────────────────────────────────────────────────────────────────
+
+async function refresh() {
+  const btn = $('refresh-btn');
+  btn.disabled = true;
+  btn.classList.add('loading');
+  btn.childNodes[2].textContent = ' Refreshing...';
+
+  try {
+    const res = await fetch('/api/all');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const d = await res.json();
+
+    renderIndices(d.indices, d.forex);
+    renderCommodities(d.commodities);
+    renderRates(d.rates);
+    renderMovers(d.movers);
+    renderNews(d.news, d.news_enabled);
+    renderReddit(d.reddit);
+
+    const ts = new Date(d.timestamp);
+    $('last-updated').textContent = `Updated ${ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  } catch (err) {
+    $('last-updated').textContent = `Error: ${err.message}`;
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    btn.childNodes[2].textContent = ' Refresh All';
+  }
+}
+
+$('refresh-btn').addEventListener('click', refresh);
+
+// Auto-load on page open
+refresh();
+</script>
+</body>
+</html>
