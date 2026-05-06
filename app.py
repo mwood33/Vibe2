@@ -1,9 +1,11 @@
 import os
 import json
 import math
+import time
 import requests
+import anthropic
 import yfinance as yf
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, send_from_directory, request
 from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -205,6 +207,52 @@ def fmt_quote(quotes, sym, label):
 
 QUESTIONS_PATH = os.path.join(os.path.dirname(__file__), 'data', 'questions.json')
 
+EXTRACTION_SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'questions': {
+            'type': 'array',
+            'items': {
+                'type': 'object',
+                'properties': {
+                    'question':     {'type': 'string'},
+                    'answer':       {'type': 'integer'},
+                    'context':      {'type': 'string'},
+                    'category':     {'type': 'string'},
+                    'report_title': {'type': 'string'},
+                    'date':         {'type': 'string'},
+                },
+                'required': ['question', 'answer', 'context', 'category', 'report_title', 'date'],
+                'additionalProperties': False,
+            },
+        },
+    },
+    'required': ['questions'],
+    'additionalProperties': False,
+}
+
+EXTRACTION_PROMPT = """You are analyzing a public opinion polling report from INNOVATIVE Research Group, a Canadian research firm.
+
+Extract every polling finding that would make an interesting game question where players guess percentages.
+
+Good findings to extract:
+- A clear percentage of a named group (Canadians, Albertans, young Canadians aged 18-34, etc.)
+- Opinions, attitudes, or stated behaviours
+- Surprising or counter-intuitive results that would challenge players
+- Results that are clearly framed in the slides (headline numbers, key callouts)
+
+For EACH finding, output:
+- question: Frame as "What percentage of [group] [said/supported/agreed/believed] [finding]?" — self-contained, no jargon
+- answer: The percentage as a plain integer 0-100 (e.g. 63, not "63%")
+- context: 1-2 sentences about survey methodology, sample size, and date if available
+- category: One of: Economy, Housing, Healthcare, Environment, Federal Politics, Social Policy, Technology, Public Safety, Defence & Security, Regional Politics, Immigration, Indigenous Affairs, Media & Trust
+- report_title: The full title of the report or survey as shown
+- date: Survey date in YYYY-MM-DD format (use YYYY-MM-01 if only month/year known, YYYY-01-01 if only year)
+
+Skip findings that: are ambiguous, lack a clear percentage, or are about horse-race election vote intention (party %s).
+Output all valid findings you can find."""
+
+
 def load_questions():
     try:
         with open(QUESTIONS_PATH, 'r') as f:
@@ -213,9 +261,19 @@ def load_questions():
         return []
 
 
+def save_questions(questions):
+    with open(QUESTIONS_PATH, 'w') as f:
+        json.dump(questions, f, indent=2)
+
+
 @app.route('/')
 def index():
     return send_from_directory('static', 'game.html')
+
+
+@app.route('/admin')
+def admin():
+    return send_from_directory('static', 'admin.html')
 
 
 @app.route('/dashboard')
@@ -225,14 +283,7 @@ def dashboard():
 
 @app.route('/api/questions')
 def get_questions():
-    questions = load_questions()
-    # Strip answer from response so client can't peek before guessing
-    safe = []
-    for q in questions:
-        s = dict(q)
-        # answer is sent — we reveal it in-browser after submit, not server-side
-        safe.append(s)
-    return jsonify(safe)
+    return jsonify(load_questions())
 
 
 @app.route('/api/question/daily')
@@ -245,6 +296,86 @@ def get_daily_question():
     today = date.today()
     idx = (today - epoch).days % len(questions)
     return jsonify(questions[idx])
+
+
+@app.route('/api/admin/process-pdf', methods=['POST'])
+def process_pdf():
+    api_key = os.environ.get('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        return jsonify({'error': 'ANTHROPIC_API_KEY not set on server'}), 500
+
+    if 'pdf' not in request.files:
+        return jsonify({'error': 'No PDF file provided'}), 400
+
+    pdf_file = request.files['pdf']
+    pdf_bytes = pdf_file.read()
+    if not pdf_bytes:
+        return jsonify({'error': 'Empty file'}), 400
+
+    client = anthropic.Anthropic(api_key=api_key)
+    uploaded = None
+    try:
+        uploaded = client.beta.files.upload(
+            file=(pdf_file.filename or 'report.pdf', pdf_bytes, 'application/pdf'),
+        )
+
+        response = client.beta.messages.create(
+            model='claude-opus-4-7',
+            max_tokens=16000,
+            betas=['files-api-2025-04-14'],
+            output_config={'format': {'type': 'json_schema', 'schema': EXTRACTION_SCHEMA}},
+            messages=[{
+                'role': 'user',
+                'content': [
+                    {
+                        'type': 'document',
+                        'source': {'type': 'file', 'file_id': uploaded.id},
+                    },
+                    {'type': 'text', 'text': EXTRACTION_PROMPT},
+                ],
+            }],
+        )
+
+        raw = next(b.text for b in response.content if b.type == 'text')
+        data = json.loads(raw)
+        questions = data.get('questions', [])
+
+        stamp = int(time.time())
+        for i, q in enumerate(questions):
+            q['id'] = f'irg-{stamp}-{i}'
+            q['source'] = 'INNOVATIVE Research Group'
+            q['source_url'] = 'https://www.innovativeresearch.ca/insights/'
+
+        return jsonify({'questions': questions})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+    finally:
+        if uploaded:
+            try:
+                client.beta.files.delete(uploaded.id)
+            except Exception:
+                pass
+
+
+@app.route('/api/admin/add-questions', methods=['POST'])
+def add_questions():
+    data = request.get_json(force=True)
+    new_qs = data.get('questions', [])
+    if not new_qs:
+        return jsonify({'error': 'No questions provided'}), 400
+
+    existing = load_questions()
+    existing_ids = {q['id'] for q in existing}
+    added = 0
+    for q in new_qs:
+        if q.get('id') not in existing_ids:
+            existing.append(q)
+            added += 1
+
+    save_questions(existing)
+    return jsonify({'added': added, 'total': len(existing)})
 
 
 @app.route('/api/all')
