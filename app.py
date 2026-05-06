@@ -1,4 +1,5 @@
 import os
+import json
 import math
 import requests
 import yfinance as yf
@@ -202,9 +203,48 @@ def fmt_quote(quotes, sym, label):
     }
 
 
+QUESTIONS_PATH = os.path.join(os.path.dirname(__file__), 'data', 'questions.json')
+
+def load_questions():
+    try:
+        with open(QUESTIONS_PATH, 'r') as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+
 @app.route('/')
 def index():
+    return send_from_directory('static', 'game.html')
+
+
+@app.route('/dashboard')
+def dashboard():
     return send_from_directory('static', 'index.html')
+
+
+@app.route('/api/questions')
+def get_questions():
+    questions = load_questions()
+    # Strip answer from response so client can't peek before guessing
+    safe = []
+    for q in questions:
+        s = dict(q)
+        # answer is sent — we reveal it in-browser after submit, not server-side
+        safe.append(s)
+    return jsonify(safe)
+
+
+@app.route('/api/question/daily')
+def get_daily_question():
+    questions = load_questions()
+    if not questions:
+        return jsonify({'error': 'no questions'}), 404
+    from datetime import date
+    epoch = date(2025, 1, 1)
+    today = date.today()
+    idx = (today - epoch).days % len(questions)
+    return jsonify(questions[idx])
 
 
 @app.route('/api/all')
