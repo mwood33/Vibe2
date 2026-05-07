@@ -328,5 +328,115 @@
     "source_url": "https://www.innovativeresearch.ca/insights/",
     "context": "Online survey of 1,500 Canadians, April 2025, amid ongoing Canada-US trade disputes.",
     "category": "Economy"
+  },
+  {
+    "id": "irg-031",
+    "question": "What share of Canadians agreed that no matter how hard they work, every year it seems more difficult to get by?",
+    "answer": 62,
+    "source": "INNOVATIVE Research Group",
+    "report_title": "Canada This Month: General Affordability",
+    "date": "2026-04-01",
+    "source_url": "https://www.innovativeresearch.ca/insights/",
+    "context": "Online survey of 1,500 Canadians, April 2026. Combined 'strongly agree' (29%) and 'somewhat agree' (34%).",
+    "category": "Economy"
+  },
+  {
+    "id": "irg-032",
+    "question": "What share of Canadians agreed that in their province, you can be anything you want if you are willing to work for it?",
+    "answer": 51,
+    "source": "INNOVATIVE Research Group",
+    "report_title": "Canada This Month: General Affordability",
+    "date": "2026-04-01",
+    "source_url": "https://www.innovativeresearch.ca/insights/",
+    "context": "Online survey of 1,500 Canadians, April 2026. Combined 'strongly agree' (17%) and 'somewhat agree' (34%).",
+    "category": "Economy"
+  },
+  {
+    "id": "irg-033",
+    "question": "What share of Canadians said they felt confident or secure about their household's current financial situation?",
+    "answer": 55,
+    "source": "INNOVATIVE Research Group",
+    "report_title": "Canada This Month: General Affordability",
+    "date": "2026-04-01",
+    "source_url": "https://www.innovativeresearch.ca/insights/",
+    "context": "Online survey of 1,500 Canadians, April 2026. Combined 'very confident' (11%) and 'somewhat confident' (44%).",
+    "category": "Economy"
+  },
+  {
+    "id": "irg-034",
+    "question": "What share of Canadians said they were satisfied with their current standard of living?",
+    "answer": 49,
+    "source": "INNOVATIVE Research Group",
+    "report_title": "Canada This Month: General Affordability",
+    "date": "2026-04-01",
+    "source_url": "https://www.innovativeresearch.ca/insights/",
+    "context": "Online survey of 1,500 Canadians, April 2026. Down sharply from 63% in July 2018 before the cost-of-living crisis.",
+    "category": "Economy"
+  },
+  {
+    "id": "irg-035",
+    "question": "What share of Canadians were satisfied with their standard of living in July 2018, before the post-COVID cost-of-living crisis?",
+    "answer": 63,
+    "source": "INNOVATIVE Research Group",
+    "report_title": "Canada This Month: General Affordability",
+    "date": "2018-07-01",
+    "source_url": "https://www.innovativeresearch.ca/insights/",
+    "context": "INNOVATIVE Research Group long-run tracking data. By April 2026 this figure had fallen to 49%.",
+    "category": "Economy"
+  },
+  {
+    "id": "irg-036",
+    "question": "Among Canadians earning under $60,000 per year, what share said they were satisfied with their current standard of living?",
+    "answer": 34,
+    "source": "INNOVATIVE Research Group",
+    "report_title": "Canada This Month: General Affordability",
+    "date": "2026-04-01",
+    "source_url": "https://www.innovativeresearch.ca/insights/",
+    "context": "Online survey of 1,500 Canadians, April 2026. Compared to 68% satisfaction among those earning $150K+.",
+    "category": "Economy"
+  },
+  {
+    "id": "irg-037",
+    "question": "Among Canadians earning $150,000 or more, what share said they felt financially confident about their household situation?",
+    "answer": 74,
+    "source": "INNOVATIVE Research Group",
+    "report_title": "Canada This Month: General Affordability",
+    "date": "2026-04-01",
+    "source_url": "https://www.innovativeresearch.ca/insights/",
+    "context": "Online survey of 1,500 Canadians, April 2026. Compared to just 41% confidence among those earning under $60K.",
+    "category": "Economy"
+  },
+  {
+    "id": "irg-038",
+    "question": "According to INNOVATIVE's 'Economic Gap' segmentation, what share of Canadians fall into the 'Strugglers' category — those who feel economically left behind despite optimism about opportunity?",
+    "answer": 28,
+    "source": "INNOVATIVE Research Group",
+    "report_title": "Canada This Month: General Affordability",
+    "date": "2026-04-01",
+    "source_url": "https://www.innovativeresearch.ca/insights/",
+    "context": "April 2026 survey of 1,500 Canadians. INNOVATIVE's four-segment model: Achievers (23%), Strugglers (28%), Ambivalent (25%), Alienated (24%).",
+    "category": "Economy"
+  },
+  {
+    "id": "irg-039",
+    "question": "Among the 'Achievers' segment — Canadians who feel economically optimistic and secure — what share said they felt financially confident?",
+    "answer": 85,
+    "source": "INNOVATIVE Research Group",
+    "report_title": "Canada This Month: General Affordability",
+    "date": "2026-04-01",
+    "source_url": "https://www.innovativeresearch.ca/insights/",
+    "context": "April 2026 survey. Achievers make up 23% of the population and skew older (56% aged 55+) and male (54%).",
+    "category": "Economy"
+  },
+  {
+    "id": "irg-040",
+    "question": "Among the 'Alienated' segment — Canadians who feel locked out of economic opportunity — what share said they were not financially confident?",
+    "answer": 63,
+    "source": "INNOVATIVE Research Group",
+    "report_title": "Canada This Month: General Affordability",
+    "date": "2026-04-01",
+    "source_url": "https://www.innovativeresearch.ca/insights/",
+    "context": "April 2026 survey. The Alienated make up 24% of Canadians and skew lower income (44% earn under $60K).",
+    "category": "Economy"
   }
 ]
