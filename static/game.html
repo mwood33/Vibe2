@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PollPosition 🇨🇦 — Guess the Poll</title>
+<style>
+  :root {
+    --red: #d42b2b;
+    --red-light: #f5e6e6;
+    --blue: #1a3a5c;
+    --blue-mid: #2c5f8a;
+    --blue-light: #e8f2fc;
+    --green: #2e7d52;
+    --green-light: #e6f4ec;
+    --yellow: #c47d00;
+    --yellow-light: #fdf3df;
+    --bg: #f9f9f7;
+    --card: #ffffff;
+    --border: #e0e0e0;
+    --text: #1a1a1a;
+    --text-muted: #666;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: var(--blue);
+    color: white;
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  .logo {
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .logo .flag { font-size: 1.1rem; }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .streak-badge {
+    background: rgba(255,255,255,0.15);
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .btn-how {
+    background: transparent;
+    border: 1.5px solid rgba(255,255,255,0.5);
+    color: white;
+    border-radius: 8px;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-how:hover { background: rgba(255,255,255,0.12); }
+
+  main {
+    flex: 1;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+    width: 100%;
+  }
+
+  /* ── Question number / category bar ── */
+  .meta-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .category-chip {
+    background: var(--blue-light);
+    color: var(--blue);
+    border-radius: 20px;
+    padding: 0.2rem 0.7rem;
+    font-weight: 600;
+    font-size: 0.75rem;
+  }
+
+  /* ── Question card ── */
+  .question-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 1.75rem 1.5rem 1.5rem;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    margin-bottom: 1.25rem;
+  }
+
+  .question-text {
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+  }
+
+  .source-line {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+  }
+
+  .source-line strong { color: var(--blue-mid); }
+
+  /* ── Slider section ── */
+  .slider-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    margin-bottom: 1rem;
+  }
+
+  .slider-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1.25rem;
+  }
+
+  .slider-value-display {
+    text-align: center;
+    margin-bottom: 1.25rem;
+  }
+
+  .slider-value-display .pct-number {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--blue);
+    line-height: 1;
+    letter-spacing: -2px;
+    transition: color 0.2s;
+  }
+
+  .slider-value-display .pct-symbol {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--blue);
+    line-height: 1;
+    transition: color 0.2s;
+  }
+
+  .slider-wrapper {
+    position: relative;
+    padding: 0.5rem 0;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(to right, var(--blue) 0%, var(--blue) var(--val, 50%), #ddd var(--val, 50%), #ddd 100%);
+    outline: none;
+    cursor: pointer;
+    transition: background 0.05s;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--blue);
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    transition: transform 0.1s, background 0.2s;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--blue);
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+
+  .slider-ticks {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .btn-submit {
+    width: 100%;
+    padding: 0.9rem;
+    background: var(--red);
+    color: white;
+    font-size: 1rem;
+    font-weight: 800;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: background 0.15s, transform 0.1s;
+    margin-top: 1.25rem;
+  }
+
+  .btn-submit:hover { background: #b82424; transform: translateY(-1px); }
+  .btn-submit:active { transform: translateY(0); }
+  .btn-submit:disabled {
+    background: #ccc;
+    cursor: default;
+    transform: none;
+  }
+
+  /* ── Result card ── */
+  .result-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    border: 2px solid var(--border);
+    display: none;
+    margin-bottom: 1rem;
+  }
+
+  .result-card.show { display: block; }
+
+  .result-card.perfect { border-color: #ffd700; background: #fffdf0; }
+  .result-card.great   { border-color: var(--green); background: var(--green-light); }
+  .result-card.good    { border-color: #4caf50; background: var(--green-light); }
+  .result-card.ok      { border-color: var(--yellow); background: var(--yellow-light); }
+  .result-card.miss    { border-color: var(--red); background: var(--red-light); }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .result-emoji { font-size: 2.2rem; }
+
+  .result-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+  }
+
+  .result-score {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .answer-reveal {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .answer-box {
+    flex: 1;
+    background: rgba(0,0,0,0.04);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    text-align: center;
+  }
+
+  .answer-box .label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+  }
+
+  .answer-box .value {
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  .answer-box.correct .value { color: var(--green); }
+  .answer-box.yours .value   { color: var(--blue); }
+
+  /* ── Proximity bar ── */
+  .proximity-bar-container {
+    margin-bottom: 1.25rem;
+  }
+
+  .proximity-bar-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .proximity-bar-track {
+    position: relative;
+    height: 20px;
+    background: #e8e8e8;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .proximity-bar-fill {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .proximity-bar-marker {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%) translateX(-50%);
+    width: 4px;
+    height: 28px;
+    background: var(--blue);
+    border-radius: 2px;
+  }
+
+  .context-box {
+    background: rgba(0,0,0,0.03);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 1rem;
+  }
+
+  .context-box strong { color: var(--text); }
+
+  .result-actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .btn-share {
+    flex: 1;
+    padding: 0.75rem;
+    background: var(--blue);
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+  .btn-share:hover { background: var(--blue-mid); }
+
+  .btn-next {
+    flex: 1;
+    padding: 0.75rem;
+    background: transparent;
+    color: var(--blue);
+    font-size: 0.9rem;
+    font-weight: 700;
+    border: 2px solid var(--blue);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+  .btn-next:hover { background: var(--blue-light); }
+
+  /* ── Stats row ── */
+  .stats-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .stat-box {
+    flex: 1;
+    background: var(--card);
+    border-radius: 10px;
+    padding: 0.75rem;
+    text-align: center;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+
+  .stat-box .stat-value {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--blue);
+    line-height: 1;
+  }
+
+  .stat-box .stat-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+  }
+
+  /* ── How to play modal ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 1rem;
+    display: none;
+  }
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 440px;
+    width: 100%;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+
+  .modal h2 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin-bottom: 1.25rem;
+    color: var(--blue);
+  }
+
+  .modal p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+  }
+
+  .scoring-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .scoring-table tr { border-bottom: 1px solid var(--border); }
+  .scoring-table td { padding: 0.5rem 0.5rem; }
+  .scoring-table td:last-child { text-align: right; font-weight: 700; color: var(--blue); }
+
+  .btn-close-modal {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    line-height: 1;
+  }
+
+  .btn-start {
+    width: 100%;
+    padding: 0.8rem;
+    background: var(--red);
+    color: white;
+    font-weight: 800;
+    font-size: 1rem;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: background 0.15s;
+  }
+  .btn-start:hover { background: #b82424; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(4rem);
+    background: var(--text);
+    color: white;
+    padding: 0.65rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+    opacity: 0;
+    z-index: 200;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+  /* ── Loading state ── */
+  .loading {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Error state ── */
+  .error-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--red);
+  }
+
+  @media (max-width: 480px) {
+    .question-text { font-size: 1.05rem; }
+    .slider-value-display .pct-number { font-size: 2.8rem; }
+    .answer-reveal { flex-direction: column; gap: 0.5rem; }
+    .result-actions { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="flag">🇨🇦</span>
+    PollPosition
+  </div>
+  <div class="header-right">
+    <div class="streak-badge" id="streakBadge">🔥 0 streak</div>
+    <button class="btn-how" onclick="openModal()">How to Play</button>
+  </div>
+</header>
+
+<main>
+  <div id="loadingState" class="loading">
+    <div class="spinner"></div>
+    Loading today's question…
+  </div>
+
+  <div id="errorState" class="error-state" style="display:none">
+    <p>Could not load question. Please try refreshing.</p>
+  </div>
+
+  <div id="gameArea" style="display:none">
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-value" id="statPlayed">0</div>
+        <div class="stat-label">Played</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="statWinPct">0%</div>
+        <div class="stat-label">Win %</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="statStreak">0</div>
+        <div class="stat-label">Streak</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="statAvgScore">—</div>
+        <div class="stat-label">Avg Score</div>
+      </div>
+    </div>
+
+    <!-- Meta bar -->
+    <div class="meta-bar">
+      <span id="questionNum">Question #1 of 30</span>
+      <span class="category-chip" id="categoryChip">Economy</span>
+    </div>
+
+    <!-- Question -->
+    <div class="question-card">
+      <div class="question-text" id="questionText">Loading…</div>
+      <div class="source-line">
+        <strong id="questionSource">INNOVATIVE Research Group</strong>
+        <span>·</span>
+        <span id="questionReport">—</span>
+        <span>·</span>
+        <span id="questionDate">—</span>
+      </div>
+    </div>
+
+    <!-- Slider -->
+    <div class="slider-card" id="sliderCard">
+      <div class="slider-label">Your Guess</div>
+      <div class="slider-value-display">
+        <span class="pct-number" id="sliderDisplay">50</span><span class="pct-symbol">%</span>
+      </div>
+      <div class="slider-wrapper">
+        <input type="range" id="guessSlider" min="0" max="100" value="50"
+               oninput="updateSlider(this.value)" />
+      </div>
+      <div class="slider-ticks">
+        <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+      </div>
+      <button class="btn-submit" id="submitBtn" onclick="submitGuess()">Submit Guess</button>
+    </div>
+
+    <!-- Result -->
+    <div class="result-card" id="resultCard">
+      <div class="result-header">
+        <div class="result-emoji" id="resultEmoji">🎯</div>
+        <div>
+          <div class="result-title" id="resultTitle">—</div>
+          <div class="result-score" id="resultScore">Score: —</div>
+        </div>
+      </div>
+
+      <div class="answer-reveal">
+        <div class="answer-box yours">
+          <div class="label">Your Guess</div>
+          <div class="value" id="revealGuess">—%</div>
+        </div>
+        <div class="answer-box correct">
+          <div class="label">Actual Answer</div>
+          <div class="value" id="revealAnswer">—%</div>
+        </div>
+      </div>
+
+      <div class="proximity-bar-container">
+        <div class="proximity-bar-label" id="proximityLabel">Off by 0 percentage points</div>
+        <div class="proximity-bar-track">
+          <div class="proximity-bar-fill" id="proximityFill" style="width:0%; background: #4caf50;"></div>
+          <div class="proximity-bar-marker" id="proximityMarker" style="left:50%;"></div>
+        </div>
+      </div>
+
+      <div class="context-box" id="contextBox"></div>
+
+      <div class="result-actions">
+        <button class="btn-share" onclick="shareResult()">📋 Copy Result</button>
+        <button class="btn-next" onclick="nextQuestion()">Next Question →</button>
+      </div>
+    </div>
+
+  </div><!-- /gameArea -->
+</main>
+
+<!-- How to Play modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modalBox">
+    <button class="btn-close-modal" onclick="closeModal()">×</button>
+    <h2>🇨🇦 How to Play PollPosition</h2>
+    <p>Real polling questions from <strong>INNOVATIVE Research Group</strong>. Drag the slider to guess the percentage of Canadians who said each thing, then hit <strong>Submit</strong>.</p>
+    <p>A new question unlocks each day. You can also browse previous questions anytime.</p>
+    <table class="scoring-table">
+      <tr><td>🏆 Within 1%</td><td>100 pts — Perfect!</td></tr>
+      <tr><td>🥇 Within 3%</td><td>90 pts — Excellent</td></tr>
+      <tr><td>🥈 Within 7%</td><td>75 pts — Great</td></tr>
+      <tr><td>🥉 Within 12%</td><td>55 pts — Good</td></tr>
+      <tr><td>📊 Within 20%</td><td>30 pts — Close</td></tr>
+      <tr><td>❌ Beyond 20%</td><td>10 pts — Keep practicing</td></tr>
+    </table>
+    <p style="font-size:0.75rem; margin-bottom:1rem;">Data sourced from INNOVATIVE Research Group's publicly released surveys. Verify exact figures at innovativeresearch.ca.</p>
+    <button class="btn-start" onclick="closeModal()">Let's Play!</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+const STATE_KEY   = 'pollposition_state_v1';
+const HISTORY_KEY = 'pollposition_history_v1';
+
+let allQuestions  = [];
+let currentQ      = null;
+let currentIndex  = 0;
+let currentGuess  = 50;
+let hasGuessed    = false;
+
+// ─── localStorage helpers ──────────────────────────────────────────────────
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || {}; }
+  catch { return {}; }
+}
+
+function saveHistory(h) {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+}
+
+function loadStats() {
+  const h = loadHistory();
+  const entries = Object.values(h);
+  const played  = entries.length;
+  const wins    = entries.filter(e => e.score >= 55).length;
+  const streak  = calcStreak(h);
+  const avg     = played ? Math.round(entries.reduce((s, e) => s + e.score, 0) / played) : null;
+  return { played, wins, streak, avg };
+}
+
+function calcStreak(h) {
+  if (!allQuestions.length) return 0;
+  let streak = 0;
+  // Count consecutive questions (by index) from current going backwards
+  for (let i = currentIndex; i >= 0; i--) {
+    const q = allQuestions[i];
+    if (!q) break;
+    const entry = h[q.id];
+    if (!entry || entry.score < 55) break;
+    streak++;
+  }
+  return streak;
+}
+
+function updateStatsDisplay() {
+  const s = loadStats();
+  document.getElementById('statPlayed').textContent  = s.played;
+  document.getElementById('statWinPct').textContent  = s.played ? Math.round(s.wins / s.played * 100) + '%' : '0%';
+  document.getElementById('statStreak').textContent  = s.streak;
+  document.getElementById('statAvgScore').textContent = s.avg !== null ? s.avg : '—';
+  document.getElementById('streakBadge').textContent = `🔥 ${s.streak} streak`;
+}
+
+// ─── Score calculation ─────────────────────────────────────────────────────
+function calcScore(diff) {
+  if (diff <= 1)  return 100;
+  if (diff <= 3)  return 90;
+  if (diff <= 7)  return 75;
+  if (diff <= 12) return 55;
+  if (diff <= 20) return 30;
+  return 10;
+}
+
+function scoreLabel(score) {
+  if (score === 100) return { emoji: '🏆', title: 'Perfect!',       cls: 'perfect' };
+  if (score >= 90)   return { emoji: '🎯', title: 'Excellent!',     cls: 'great'   };
+  if (score >= 75)   return { emoji: '🥈', title: 'Great Guess!',   cls: 'good'    };
+  if (score >= 55)   return { emoji: '👍', title: 'Not Bad!',       cls: 'ok'      };
+  if (score >= 30)   return { emoji: '📊', title: 'Getting Closer', cls: 'ok'      };
+  return              { emoji: '❌', title: 'Missed the Mark',      cls: 'miss'    };
+}
+
+// ─── Slider ────────────────────────────────────────────────────────────────
+function updateSlider(val) {
+  currentGuess = parseInt(val);
+  document.getElementById('sliderDisplay').textContent = val;
+  const slider = document.getElementById('guessSlider');
+  slider.style.setProperty('--val', val + '%');
+  slider.style.background = `linear-gradient(to right, var(--blue) 0%, var(--blue) ${val}%, #ddd ${val}%, #ddd 100%)`;
+}
+
+// ─── Load & display question ───────────────────────────────────────────────
+function getDailyIndex(total) {
+  // Cycle through questions day-by-day from a fixed epoch
+  const epoch = new Date('2025-01-01').getTime();
+  const now   = Date.now();
+  const daysSinceEpoch = Math.floor((now - epoch) / 86400000);
+  return daysSinceEpoch % total;
+}
+
+async function loadQuestions() {
+  const res = await fetch('/api/questions');
+  if (!res.ok) throw new Error('fetch failed');
+  return res.json();
+}
+
+function displayQuestion(idx) {
+  currentQ     = allQuestions[idx];
+  currentIndex = idx;
+  hasGuessed   = false;
+
+  const history = loadHistory();
+  const prev    = history[currentQ.id];
+
+  document.getElementById('questionNum').textContent =
+    `Question #${idx + 1} of ${allQuestions.length}`;
+  document.getElementById('categoryChip').textContent  = currentQ.category;
+  document.getElementById('questionText').textContent  = currentQ.question;
+  document.getElementById('questionSource').textContent = currentQ.source;
+  document.getElementById('questionReport').textContent = currentQ.report_title;
+
+  // Format date nicely
+  const d = new Date(currentQ.date + 'T12:00:00');
+  document.getElementById('questionDate').textContent =
+    d.toLocaleDateString('en-CA', { year: 'numeric', month: 'short' });
+
+  // Reset slider
+  updateSlider(50);
+  document.getElementById('guessSlider').value = 50;
+
+  // Hide result, show slider
+  document.getElementById('resultCard').className = 'result-card';
+  document.getElementById('sliderCard').style.display = '';
+  document.getElementById('submitBtn').disabled = false;
+
+  // If already guessed, show result immediately
+  if (prev) {
+    hasGuessed = true;
+    renderResult(prev.guess, currentQ.answer, prev.score, false);
+  }
+
+  updateStatsDisplay();
+}
+
+// ─── Submit guess ──────────────────────────────────────────────────────────
+function submitGuess() {
+  if (hasGuessed) return;
+  hasGuessed = true;
+
+  const guess  = currentGuess;
+  const answer = currentQ.answer;
+  const diff   = Math.abs(guess - answer);
+  const score  = calcScore(diff);
+
+  // Save to history
+  const history = loadHistory();
+  history[currentQ.id] = { guess, score, date: new Date().toISOString() };
+  saveHistory(history);
+
+  renderResult(guess, answer, score, true);
+  updateStatsDisplay();
+}
+
+function renderResult(guess, answer, score, animate) {
+  const diff   = Math.abs(guess - answer);
+  const info   = scoreLabel(score);
+
+  // Update slider to show actual answer on track
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('sliderCard').style.display = 'none';
+
+  const card = document.getElementById('resultCard');
+  card.className = `result-card show ${info.cls}`;
+
+  document.getElementById('resultEmoji').textContent  = info.emoji;
+  document.getElementById('resultTitle').textContent  = info.title;
+  document.getElementById('resultScore').textContent  = `Score: ${score}/100`;
+  document.getElementById('revealGuess').textContent  = guess + '%';
+  document.getElementById('revealAnswer').textContent = answer + '%';
+
+  const direction = guess > answer ? 'too high' : guess < answer ? 'too low' : 'spot on';
+  const label = diff === 0
+    ? '🎯 Exactly right!'
+    : `Off by ${diff} point${diff === 1 ? '' : 's'} — you were ${direction}`;
+  document.getElementById('proximityLabel').textContent = label;
+
+  // Proximity bar: fill = accuracy from 0-100%
+  const accuracy = Math.max(0, 100 - (diff / 50) * 100);
+  const fill = document.getElementById('proximityFill');
+  fill.style.width = '0%';
+  fill.style.background = score >= 75 ? 'var(--green)' : score >= 30 ? 'var(--yellow)' : 'var(--red)';
+  if (animate) {
+    setTimeout(() => { fill.style.width = accuracy + '%'; }, 80);
+  } else {
+    fill.style.width = accuracy + '%';
+    fill.style.transition = 'none';
+  }
+
+  // Marker at answer position
+  document.getElementById('proximityMarker').style.left = answer + '%';
+
+  // Context
+  const ctx = document.getElementById('contextBox');
+  ctx.innerHTML = `<strong>About this poll:</strong> ${currentQ.context || ''}`;
+
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ─── Navigation ────────────────────────────────────────────────────────────
+function nextQuestion() {
+  const next = (currentIndex + 1) % allQuestions.length;
+  displayQuestion(next);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── Share ─────────────────────────────────────────────────────────────────
+function shareResult() {
+  const history = loadHistory();
+  const entry   = history[currentQ.id];
+  if (!entry) return;
+
+  const diff  = Math.abs(entry.guess - currentQ.answer);
+  const info  = scoreLabel(entry.score);
+  const stars = entry.score >= 90 ? '⭐⭐⭐⭐⭐'
+    : entry.score >= 75 ? '⭐⭐⭐⭐'
+    : entry.score >= 55 ? '⭐⭐⭐'
+    : entry.score >= 30 ? '⭐⭐'
+    : '⭐';
+
+  const text =
+`🇨🇦 PollPosition — ${currentQ.category}
+${info.emoji} ${info.title} ${stars}
+📊 Guessed ${entry.guess}% → Actual: ${currentQ.answer}%
+Score: ${entry.score}/100 (off by ${diff}pts)
+
+Can you beat me? pollposition.ca`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Result copied to clipboard!');
+  }).catch(() => {
+    showToast('Copy not supported — try manually');
+  });
+}
+
+// ─── Modal ─────────────────────────────────────────────────────────────────
+function openModal()  { document.getElementById('modalOverlay').classList.add('show'); }
+function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+// ─── Toast ─────────────────────────────────────────────────────────────────
+function showToast(msg, dur = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+// ─── Init ──────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    allQuestions = await loadQuestions();
+    if (!allQuestions.length) throw new Error('no questions');
+
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('gameArea').style.display = '';
+
+    const dailyIdx = getDailyIndex(allQuestions.length);
+    displayQuestion(dailyIdx);
+
+    // First visit → show how to play
+    if (!localStorage.getItem('pollposition_seen_intro')) {
+      localStorage.setItem('pollposition_seen_intro', '1');
+      openModal();
+    }
+  } catch (e) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorState').style.display  = '';
+    console.error(e);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

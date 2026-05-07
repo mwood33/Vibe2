@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PollPosition — Admin: Add Questions</title>
+<style>
+  :root {
+    --blue: #1a3a5c; --blue-mid: #2c5f8a; --blue-light: #e8f2fc;
+    --red: #d42b2b; --green: #2e7d52; --green-light: #e6f4ec;
+    --yellow: #c47d00; --yellow-light: #fdf3df;
+    --bg: #f9f9f7; --card: #ffffff; --border: #e0e0e0;
+    --text: #1a1a1a; --text-muted: #666;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08); --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  header {
+    background: var(--blue); color: white;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    height: 56px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .logo { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.5px; }
+  .logo span { opacity: 0.6; font-weight: 400; font-size: 0.85rem; margin-left: 0.5rem; }
+  .btn-back {
+    background: rgba(255,255,255,0.15); border: none; color: white;
+    border-radius: 8px; padding: 0.3rem 0.75rem; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+  }
+
+  main { max-width: 760px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+
+  h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--blue); }
+
+  .card {
+    background: var(--card); border-radius: var(--radius);
+    padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border);
+    margin-bottom: 1.25rem;
+  }
+
+  .section-title {
+    font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 1rem;
+  }
+
+  /* ── How it works ── */
+  .steps { display: flex; flex-direction: column; gap: 0.75rem; }
+  .step { display: flex; gap: 0.75rem; align-items: flex-start; }
+  .step-num {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--blue); color: white; font-size: 0.7rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; margin-top: 1px;
+  }
+  .step p { font-size: 0.875rem; line-height: 1.5; color: var(--text-muted); }
+  .step p strong { color: var(--text); }
+
+  /* ── URL input ── */
+  .input-row { display: flex; gap: 0.5rem; }
+  .input-row input {
+    flex: 1; padding: 0.65rem 0.875rem; border: 1.5px solid var(--border);
+    border-radius: 8px; font-size: 0.875rem; outline: none;
+    transition: border-color 0.15s;
+  }
+  .input-row input:focus { border-color: var(--blue); }
+  .btn-primary {
+    padding: 0.65rem 1.1rem; background: var(--blue); color: white;
+    font-size: 0.875rem; font-weight: 700; border: none; border-radius: 8px;
+    cursor: pointer; white-space: nowrap; transition: background 0.15s;
+  }
+  .btn-primary:hover { background: var(--blue-mid); }
+  .btn-primary:disabled { background: #aaa; cursor: default; }
+
+  /* ── Drop zone ── */
+  .dropzone {
+    border: 2px dashed var(--border); border-radius: 10px; padding: 2rem;
+    text-align: center; cursor: pointer; transition: all 0.15s;
+    background: var(--bg);
+  }
+  .dropzone:hover, .dropzone.drag-over { border-color: var(--blue); background: var(--blue-light); }
+  .dropzone-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  .dropzone p { font-size: 0.875rem; color: var(--text-muted); }
+  .dropzone p strong { color: var(--blue); cursor: pointer; }
+  #fileInput { display: none; }
+
+  /* ── Status ── */
+  .status-bar {
+    display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem;
+    border-radius: 8px; font-size: 0.875rem; font-weight: 600;
+    margin-bottom: 1rem; display: none;
+  }
+  .status-bar.info    { background: var(--blue-light); color: var(--blue); }
+  .status-bar.success { background: var(--green-light); color: var(--green); }
+  .status-bar.error   { background: #fce8e8; color: var(--red); }
+  .spinner-sm {
+    width: 18px; height: 18px; border: 2px solid currentColor;
+    border-top-color: transparent; border-radius: 50%;
+    animation: spin 0.7s linear infinite; flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Question cards ── */
+  #resultsSection { display: none; }
+
+  .results-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  .results-header h2 { margin: 0; }
+
+  .btn-add-all {
+    padding: 0.55rem 1rem; background: var(--green); color: white;
+    font-size: 0.875rem; font-weight: 700; border: none; border-radius: 8px;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .btn-add-all:hover { background: #256843; }
+  .btn-add-all:disabled { background: #aaa; cursor: default; }
+
+  .q-card {
+    background: var(--card); border-radius: 10px; padding: 1rem 1.25rem;
+    border: 1.5px solid var(--border); margin-bottom: 0.75rem;
+    display: flex; gap: 1rem; align-items: flex-start;
+    transition: border-color 0.15s;
+  }
+  .q-card.selected { border-color: var(--green); background: var(--green-light); }
+  .q-card.added    { border-color: #aaa; opacity: 0.5; }
+
+  .q-check { flex-shrink: 0; margin-top: 2px; width: 18px; height: 18px; cursor: pointer; }
+
+  .q-body { flex: 1; }
+  .q-question { font-size: 0.9rem; font-weight: 600; line-height: 1.4; margin-bottom: 0.4rem; }
+  .q-meta {
+    display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center;
+    font-size: 0.75rem; color: var(--text-muted);
+  }
+  .q-answer {
+    background: var(--blue); color: white; border-radius: 20px;
+    padding: 0.1rem 0.5rem; font-weight: 700; font-size: 0.75rem;
+  }
+  .q-cat {
+    background: var(--blue-light); color: var(--blue);
+    border-radius: 20px; padding: 0.1rem 0.5rem; font-weight: 600;
+  }
+  .q-context { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; line-height: 1.4; }
+
+  .empty-state {
+    text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.875rem;
+  }
+
+  /* ── Stats bar ── */
+  .stats {
+    display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;
+  }
+  .stat {
+    background: var(--card); border-radius: 8px; padding: 0.5rem 0.875rem;
+    border: 1px solid var(--border); font-size: 0.8rem; color: var(--text-muted);
+  }
+  .stat strong { color: var(--text); font-size: 1rem; }
+
+  @media (max-width: 480px) {
+    .input-row { flex-direction: column; }
+    .results-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🇨🇦 PollPosition <span>Admin</span></div>
+  <a class="btn-back" href="/">← Back to Game</a>
+</header>
+
+<main>
+
+  <!-- How it works -->
+  <div class="card">
+    <div class="section-title">How it works</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <p>Find a new INNOVATIVE Research Group report at <strong>innovativeresearch.ca/insights</strong></p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <p><strong>Paste the PDF link below</strong> — your browser will fetch it directly. Or download the PDF and upload it.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <p>Claude reads the deck and extracts interesting poll findings as game questions automatically.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <p>Review the questions, <strong>check the ones you want</strong>, and click "Add to Game".</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- URL input -->
+  <div class="card">
+    <div class="section-title">Option A — Paste PDF URL</div>
+    <div class="input-row">
+      <input type="url" id="pdfUrl" placeholder="https://innovativeresearch.ca/wp-content/uploads/…/report.pdf" />
+      <button class="btn-primary" id="fetchBtn" onclick="fetchFromUrl()">Fetch & Extract</button>
+    </div>
+    <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.6rem;">
+      Your browser fetches the PDF — this works even when the server can't access the site directly.
+    </p>
+  </div>
+
+  <!-- File upload -->
+  <div class="card">
+    <div class="section-title">Option B — Upload PDF file</div>
+    <div class="dropzone" id="dropzone"
+         onclick="document.getElementById('fileInput').click()"
+         ondragover="handleDragOver(event)"
+         ondragleave="handleDragLeave(event)"
+         ondrop="handleDrop(event)">
+      <div class="dropzone-icon">📄</div>
+      <p>Drop a PDF here, or <strong>click to browse</strong></p>
+      <p style="font-size:0.7rem;margin-top:0.25rem;">Download the PDF from your browser first, then upload here</p>
+    </div>
+    <input type="file" id="fileInput" accept=".pdf,application/pdf" onchange="handleFileSelect(event)">
+  </div>
+
+  <!-- Status -->
+  <div class="status-bar" id="statusBar">
+    <div class="spinner-sm" id="statusSpinner" style="display:none"></div>
+    <span id="statusText"></span>
+  </div>
+
+  <!-- Results -->
+  <div id="resultsSection">
+    <div class="results-header">
+      <h2 id="resultsTitle">Extracted Questions</h2>
+      <button class="btn-add-all" id="addSelectedBtn" onclick="addSelected()">
+        ✅ Add Selected to Game
+      </button>
+    </div>
+
+    <div class="stats" id="statsBar"></div>
+
+    <div id="questionsList"></div>
+  </div>
+
+</main>
+
+<script>
+let extractedQuestions = [];
+
+// ── Status helpers ─────────────────────────────────────────────────────────
+function showStatus(msg, type = 'info', spinning = false) {
+  const bar = document.getElementById('statusBar');
+  bar.className = `status-bar ${type}`;
+  bar.style.display = 'flex';
+  document.getElementById('statusText').textContent = msg;
+  document.getElementById('statusSpinner').style.display = spinning ? '' : 'none';
+}
+function hideStatus() {
+  document.getElementById('statusBar').style.display = 'none';
+}
+
+// ── Fetch from URL (browser-side, bypasses server 403) ─────────────────────
+async function fetchFromUrl() {
+  const url = document.getElementById('pdfUrl').value.trim();
+  if (!url) { showStatus('Please enter a PDF URL.', 'error'); return; }
+  if (!url.toLowerCase().endsWith('.pdf') && !url.includes('pdf')) {
+    showStatus('URL doesn\'t look like a PDF link. Try anyway?', 'error');
+  }
+
+  setLoading(true);
+  showStatus('Fetching PDF from URL via your browser…', 'info', true);
+
+  try {
+    // Browser fetch — works even when server is blocked
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const blob = await resp.blob();
+    const filename = url.split('/').pop() || 'report.pdf';
+    await processBlob(blob, filename);
+  } catch (e) {
+    // CORS or network error — tell user to download and upload
+    showStatus(
+      `Could not fetch URL directly (${e.message}). Please download the PDF from your browser and upload it using Option B below.`,
+      'error'
+    );
+    setLoading(false);
+  }
+}
+
+// ── File upload handlers ───────────────────────────────────────────────────
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) processFile(file);
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('dropzone').classList.add('drag-over');
+}
+function handleDragLeave(e) {
+  document.getElementById('dropzone').classList.remove('drag-over');
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropzone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) processFile(file);
+}
+
+function processFile(file) {
+  if (!file.type.includes('pdf') && !file.name.endsWith('.pdf')) {
+    showStatus('Please upload a PDF file.', 'error');
+    return;
+  }
+  setLoading(true);
+  showStatus(`Reading ${file.name}…`, 'info', true);
+  processBlob(file, file.name);
+}
+
+// ── Core: send PDF to server for extraction ────────────────────────────────
+async function processBlob(blob, filename) {
+  showStatus('Sending to Claude for analysis… this takes ~20–40 seconds.', 'info', true);
+
+  const formData = new FormData();
+  formData.append('pdf', blob, filename);
+
+  try {
+    const resp = await fetch('/api/admin/process-pdf', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await resp.json();
+
+    if (!resp.ok || data.error) {
+      throw new Error(data.error || `Server error ${resp.status}`);
+    }
+
+    extractedQuestions = data.questions || [];
+    if (!extractedQuestions.length) {
+      showStatus('Claude didn\'t find any clear percentage findings in this PDF. Try a different report.', 'error');
+      setLoading(false);
+      return;
+    }
+
+    showStatus(`Found ${extractedQuestions.length} questions — review and add below.`, 'success');
+    renderResults();
+  } catch (e) {
+    showStatus(`Extraction failed: ${e.message}`, 'error');
+  }
+
+  setLoading(false);
+}
+
+// ── Render extracted questions ─────────────────────────────────────────────
+function renderResults() {
+  document.getElementById('resultsSection').style.display = '';
+
+  // Stats
+  const categories = [...new Set(extractedQuestions.map(q => q.category))];
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat"><strong>${extractedQuestions.length}</strong> questions found</div>
+    <div class="stat"><strong>${categories.length}</strong> categories</div>
+  `;
+
+  // Question cards
+  const list = document.getElementById('questionsList');
+  list.innerHTML = '';
+
+  if (!extractedQuestions.length) {
+    list.innerHTML = '<div class="empty-state">No questions extracted.</div>';
+    return;
+  }
+
+  extractedQuestions.forEach((q, i) => {
+    const card = document.createElement('div');
+    card.className = 'q-card selected';
+    card.id = `qcard-${i}`;
+    card.innerHTML = `
+      <input type="checkbox" class="q-check" id="qcheck-${i}" checked onchange="toggleCard(${i})">
+      <div class="q-body">
+        <div class="q-question">${escHtml(q.question)}</div>
+        <div class="q-meta">
+          <span class="q-answer">${q.answer}%</span>
+          <span class="q-cat">${escHtml(q.category)}</span>
+          <span>${escHtml(q.report_title)}</span>
+          <span>·</span>
+          <span>${q.date || '—'}</span>
+        </div>
+        <div class="q-context">${escHtml(q.context || '')}</div>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+
+  updateAddBtn();
+  document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleCard(i) {
+  const checked = document.getElementById(`qcheck-${i}`).checked;
+  const card = document.getElementById(`qcard-${i}`);
+  card.classList.toggle('selected', checked);
+  updateAddBtn();
+}
+
+function updateAddBtn() {
+  const selected = document.querySelectorAll('.q-check:checked:not(:disabled)').length;
+  const btn = document.getElementById('addSelectedBtn');
+  btn.textContent = selected
+    ? `✅ Add ${selected} Question${selected === 1 ? '' : 's'} to Game`
+    : 'Add Selected to Game';
+  btn.disabled = selected === 0;
+}
+
+// ── Add selected questions to game ────────────────────────────────────────
+async function addSelected() {
+  const selected = [];
+  document.querySelectorAll('.q-check:checked').forEach(cb => {
+    const i = parseInt(cb.id.replace('qcheck-', ''));
+    selected.push(extractedQuestions[i]);
+  });
+
+  if (!selected.length) return;
+
+  const btn = document.getElementById('addSelectedBtn');
+  btn.disabled = true;
+  btn.textContent = 'Adding…';
+
+  try {
+    const resp = await fetch('/api/admin/add-questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ questions: selected }),
+    });
+    const data = await resp.json();
+
+    if (!resp.ok || data.error) throw new Error(data.error);
+
+    showStatus(`✅ Added ${data.added} questions. Game now has ${data.total} total questions.`, 'success');
+
+    // Mark added cards
+    document.querySelectorAll('.q-check:checked').forEach(cb => {
+      cb.disabled = true;
+      const i = parseInt(cb.id.replace('qcheck-', ''));
+      const card = document.getElementById(`qcard-${i}`);
+      card.classList.remove('selected');
+      card.classList.add('added');
+    });
+
+    updateAddBtn();
+
+  } catch (e) {
+    showStatus(`Failed to add questions: ${e.message}`, 'error');
+    btn.disabled = false;
+    btn.textContent = `✅ Add ${selected.length} Questions to Game`;
+  }
+}
+
+// ── Utils ──────────────────────────────────────────────────────────────────
+function setLoading(on) {
+  document.getElementById('fetchBtn').disabled = on;
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Enter key on URL input
+document.getElementById('pdfUrl').addEventListener('keydown', e => {
+  if (e.key === 'Enter') fetchFromUrl();
+});
+</script>
+</body>
+</html>
